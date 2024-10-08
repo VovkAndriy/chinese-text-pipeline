@@ -24,6 +24,10 @@ def divide_into_paragraphs(text: str) -> list:
 def divide_into_sentences(paragraph: str) -> list:
     """
     Divides paragraph into individual sentences.
+    It uses split function by chinese punctuation (。！？)
+    It counts quotes before punctuation that was found
+    and if that counts is even -> return sentence
+        if not -> continue, because we want full sentence, not a part of it
     """
     ending_pattern = re.compile(r'([。！？])')
     quote_pattern = re.compile(r'["“”]')
