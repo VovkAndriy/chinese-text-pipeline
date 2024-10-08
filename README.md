@@ -32,15 +32,25 @@ This script processes Chinese text through a series of steps, including text div
   - **Text Division:**
     - `divide_into_paragraphs()`: Splits the input text into paragraphs.
     - `divide_into_sentences()`: Further divides paragraphs into individual sentences.
-  - **Chunking & Overlapping:**
-    - `divide_sentence_into_chunks_with_overlapping()`: When a sentence is too long for OpenAI's context window, this function splits it into smaller chunks, adding overlapping sections to maintain context.
+  - **Chunking:**
+    - `divide_text_into_chunks()`: Divides a large text into smaller chunks. Each chunk will contain as many paragraphs as possible.
+    If a paragraph is too large, it will be divided by sentences to fit within token limits.
   - **Word Extraction:**
     - `divide_into_words()`: Uses OpenAI to extract individual words from each chunk of the text.
+
+### 4. `json_creator.py`
   - **JSON Creation:**
     - `create_json_from_text()`: Converts the processed words into a structured JSON format without translation, allowing for easy further analysis or manipulation of the text.
+    - other default functions like `create_paragraph_json()` for creation JSON structure
+
+### 5.  FastAPI Endpoint
+- Endpoint `POST /get-json/`
+  - This endpoint receives Chinese text in the request body and returns the processed JSON output, including extracted words and their structure.
+  - Be sure to handle quotes correctly! (as \")
 
 ### 4. Overall Pipeline Workflow
-1. The text is split into paragraphs, then sentences, and finally into individual words.
-2. Sentences that exceed OpenAI's context window are divided into smaller chunks with overlapping words.
+1. The text is split into paragraphs, then sentences.
+2. To split into words it uses intelligent chunking.
+2. Paragraphs that exceed OpenAI's context window are divided into smaller chunks (full sentences).
 3. Each chunk is sent to OpenAI for word extraction.
 4. The output, including extracted words and punctuation, is formatted into a JSON structure.
