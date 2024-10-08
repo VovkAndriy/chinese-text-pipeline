@@ -1,20 +1,20 @@
 import os
 import tiktoken
 
-from openai import OpenAI
+from openai import AsyncClient
 from dotenv import load_dotenv
 
 
 load_dotenv()
 
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-client = OpenAI(api_key=OPENAI_API_KEY)
+client = AsyncClient(api_key=OPENAI_API_KEY)
 
 MODEL = "gpt-4"
 MAX_TOKENS = 5000
 
 
-def ask_openai(system_intel: str, prompt: str, model: str = MODEL) -> str:
+async def ask_openai(system_intel: str, prompt: str, model: str = MODEL) -> str:
     """
     Function to interact with OpenAI
 
@@ -24,7 +24,7 @@ def ask_openai(system_intel: str, prompt: str, model: str = MODEL) -> str:
 
     :return: response of OpenAI
     """
-    result = client.chat.completions.create(
+    result = await client.chat.completions.create(
         model=model,
         messages=[
             {"role": "system", "content": system_intel},
