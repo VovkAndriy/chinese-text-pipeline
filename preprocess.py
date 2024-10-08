@@ -51,59 +51,67 @@ def divide_into_sentences(paragraph: str) -> list:
     return combine_sentence_with_ending
 
 
-# It divides sentence into chunks with 10% overlapping before and after chunk
-# returns array of that chunks
-def divide_sentence_into_chunks_with_overlapping(sentence: str) -> list:
-    tokens = count_tokens(sentence)
+def divide_text_into_chunks(
+        text: str,
+        paragraphs: list[str] = None
+) -> list[str]:
+    """
+    Divides a large text into smaller chunks. Each chunk will contain as many paragraphs as possible.
+    If a paragraph is too large, it will be divided by sentences to fit within token limits.
+
+    :param text: The input text to be chunked.
+    :param paragraphs: (Optional) List of paragraphs from the text. If not provided, they will be extracted.
+    :return: A list of chunks where each chunk is a portion of the text that fits within the token limit.
+    """
+    tokens = count_tokens(text)
 
     if tokens < MAX_TOKENS:
-        return [sentence]
+        return [text]
 
-    count_of_chunking = ceil(tokens * 1.3 / MAX_TOKENS)
-    chunk_size = int(len(sentence) / count_of_chunking)
+    count_of_chunking = ceil(tokens / MAX_TOKENS)
 
     chunks = []
-    for i in range(count_of_chunking):
-        start = i * chunk_size
-        end = (i + 1) * chunk_size
-        part_of_sentence = sentence[start:end]
+    if not paragraphs:
+        paragraphs = divide_into_paragraphs(text)
 
-        overlapped_before, overlapped_after = "", ""
+    for paragraph in paragraphs:
+        paragraph_tokens = count_tokens(paragraph)
 
-        if i != 0:
-            overlapped_before = f"{sentence[ceil(start - chunk_size * 0.1):start]}"
+        if paragraph_tokens < MAX_TOKENS:
+            # If the paragraph fits within the token limit, attempt to add it to the current chunk
+            if chunks and count_tokens(chunks[-1]) + paragraph_tokens < MAX_TOKENS:
+                chunks[-1] += paragraph
+            else:
+                chunks.append(paragraph)  # Start a new chunk with the paragraph
+            continue
 
-        if i != count_of_chunking:
-            overlapped_after = f"{sentence[end:ceil(end + chunk_size * 0.1)]}"
+        # If the paragraph is too large, split it into sentences
+        sentences = divide_into_sentences(paragraph)
+        sentences_per_chunk = ceil(len(sentences) / count_of_chunking)
 
-        part_of_sentence = overlapped_before + part_of_sentence + overlapped_after
-
-        chunks.append(part_of_sentence)
+        for start in range(0, len(sentences), sentences_per_chunk):
+            end = min(len(sentences), start + sentences_per_chunk)
+            chunks.append("".join(sentences[start: end]))
 
     return chunks
 
 
-# If sentence exceeds context window
-# it will make little overlap to have context for translation
-def divide_into_words(sentence: str) -> list:
+def divide_text_into_words(
+        text: str,
+        paragraphs: list[str] = None
+) -> list:
     """
     Function to extract individual words from each chunk of the text.
     Specifics: Usage of an OpenAI
     """
-    chunks = divide_sentence_into_chunks_with_overlapping(sentence)
-
+    chunks = divide_text_into_chunks(text, paragraphs)
     words = []
     for chunk in chunks:
-        new_words = json.loads(
-           ask_openai(system_to_retrieve_words, chunk)
-        )
-
-        for i in range(1, len(new_words)):
-            if new_words[:i] == words[-i:]:
-                new_words = new_words[i:]
-                break
-
-        words.extend(new_words)
+        res = ask_openai(system_to_retrieve_words, chunk)
+        words.extend(json.loads(
+            res
+            # '[]'
+        ))
 
     return words
 
