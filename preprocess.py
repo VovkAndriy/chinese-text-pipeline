@@ -1,9 +1,8 @@
+import asyncio
 import re
 import json
 
-from config import (
-    system_to_retrieve_words,
-)
+from config import system_to_retrieve_words
 from openai_request import (
     ask_openai,
     count_tokens,
@@ -26,7 +25,7 @@ def divide_into_sentences(paragraph: str) -> list:
     Divides paragraph into individual sentences.
     It uses split function by chinese punctuation (。！？)
     It counts quotes before punctuation that was found
-    and if that counts is even -> return sentence
+    and if that count is even -> return sentence
         if not -> continue, because we want full sentence, not a part of it
     """
     ending_pattern = re.compile(r'([。！？])')
@@ -96,102 +95,28 @@ def divide_text_into_chunks(
     return chunks
 
 
-def divide_text_into_words(
+async def divide_text_into_words(
         text: str,
         paragraphs: list[str] = None
 ) -> list:
     """
-    Function to extract individual words from each chunk of the text.
-    Specifics: Usage of an OpenAI
+    Extract individual words from each chunk of text.
+    This function utilizes the OpenAI API to process text and extract words concurrently from specified chunks.
+    It is designed to enhance performance by handling requests in parallel, allowing for efficient word extraction
+    from larger text inputs.
     """
     chunks = divide_text_into_chunks(text, paragraphs)
-    words = []
+    tasks = []
+
     for chunk in chunks:
-        res = ask_openai(system_to_retrieve_words, chunk)
-        words.extend(json.loads(
-            res
-            # '[]'
-        ))
+        # Create a coroutine for each chunk to ask OpenAI
+        tasks.append(ask_openai(system_to_retrieve_words, chunk))
+
+    # Run all tasks concurrently and gather results
+    responses = await asyncio.gather(*tasks)
+
+    words = []
+    for response in responses:
+        words.extend(json.loads(response))
 
     return words
-
-
-def create_default_json(text: str):
-    """Create structure for JSON"""
-    return {
-        "content": {
-            "fullText": text,
-            "fullTranslation": None,
-            "paragraphs": []
-        }
-    }
-
-
-def create_paragraph_json(id: int, paragraph: str):
-    """Create structure for paragraph in JSON"""
-    return {
-            "id": id,
-            "text": paragraph,
-            "translation": None,
-            "pinyin": None,
-            "sentences": []
-        }
-
-
-def create_sentence_json(id: int, sentence: str):
-    """Create structure for sentence in JSON"""
-    return {
-            "id": id,
-            "text": sentence,
-            "translation": None,
-            "words": []
-        }
-
-
-def create_word_json(id: int, word: str):
-    """Create structure for word in JSON"""
-    return {
-        "text": word,
-        "index": id,
-        "pinyin": None,
-        "partOfSpeech": None,
-        "translation": None
-    }
-
-
-def create_json_from_text(text: str):
-    """
-    Converts the passed text into a structured JSON format,
-    currently without translation.
-    """
-    result_dictionary = create_default_json(text)
-
-    paragraphs = divide_into_paragraphs(text)
-
-    words = divide_text_into_words(text, paragraphs)
-    words_index = 0
-
-    for i, paragraph in enumerate(paragraphs):
-        paragraph_json = create_paragraph_json(i, paragraph)
-
-        sentences = divide_into_sentences(paragraph)
-
-        for j, sentence in enumerate(sentences):
-            sentence_json = create_sentence_json(j, sentence)
-            accumulated_length = 0  # Track the total length of words added
-
-            for k in range(words_index, len(words)):
-                word = words[k]
-                accumulated_length += len(word)
-                word_json = create_word_json(k - words_index, word)
-                sentence_json["words"].append(word_json)
-
-                if accumulated_length >= len(sentence):
-                    words_index = k + 1
-                    break
-
-            paragraph_json["sentences"].append(sentence_json)
-
-        result_dictionary["content"]["paragraphs"].append(paragraph_json)
-
-    return result_dictionary
