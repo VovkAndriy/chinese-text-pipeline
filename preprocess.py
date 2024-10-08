@@ -12,7 +12,8 @@ from openai_request import (
 from math import ceil
 
 
-def divide_into_paragraphs(text: str):
+def divide_into_paragraphs(text: str) -> list:
+    """Splits the input text into paragraphs"""
     return [
         paragraph
         for paragraph in text.split('\n')
@@ -20,7 +21,10 @@ def divide_into_paragraphs(text: str):
     ]
 
 
-def divide_into_sentences(paragraph: str):
+def divide_into_sentences(paragraph: str) -> list:
+    """
+    Divides paragraph into individual sentences.
+    """
     ending_pattern = re.compile(r'([。！？])')
     quote_pattern = re.compile(r'["“”]')
 
@@ -45,7 +49,7 @@ def divide_into_sentences(paragraph: str):
 
 # It divides sentence into chunks with 10% overlapping before and after chunk
 # returns array of that chunks
-def divide_sentence_into_chunks_with_overlapping(sentence: str):
+def divide_sentence_into_chunks_with_overlapping(sentence: str) -> list:
     tokens = count_tokens(sentence)
 
     if tokens < MAX_TOKENS:
@@ -77,7 +81,11 @@ def divide_sentence_into_chunks_with_overlapping(sentence: str):
 
 # If sentence exceeds context window
 # it will make little overlap to have context for translation
-def divide_into_words(sentence: str):
+def divide_into_words(sentence: str) -> list:
+    """
+    Function to extract individual words from each chunk of the text.
+    Specifics: Usage of an OpenAI
+    """
     chunks = divide_sentence_into_chunks_with_overlapping(sentence)
 
     words = []
@@ -97,6 +105,7 @@ def divide_into_words(sentence: str):
 
 
 def create_default_json(text: str):
+    """Create structure for JSON"""
     return {
         "content": {
             "fullText": text,
@@ -107,6 +116,7 @@ def create_default_json(text: str):
 
 
 def create_paragraph_json(id: int, paragraph: str):
+    """Create structure for paragraph in JSON"""
     return {
             "id": id,
             "text": paragraph,
@@ -117,6 +127,7 @@ def create_paragraph_json(id: int, paragraph: str):
 
 
 def create_sentence_json(id: int, sentence: str):
+    """Create structure for sentence in JSON"""
     return {
             "id": id,
             "text": sentence,
@@ -126,6 +137,7 @@ def create_sentence_json(id: int, sentence: str):
 
 
 def create_word_json(id: int, word: str):
+    """Create structure for word in JSON"""
     return {
         "text": word,
         "index": id,
@@ -136,6 +148,10 @@ def create_word_json(id: int, word: str):
 
 
 def create_json_from_text(text: str):
+    """
+    Converts the processed words into a structured JSON format,
+    currently without translation.
+    """
     result_dictionary = create_default_json(text)
 
     paragraphs = divide_into_paragraphs(text)
