@@ -161,12 +161,15 @@ def create_word_json(id: int, word: str):
 
 def create_json_from_text(text: str):
     """
-    Converts the processed words into a structured JSON format,
+    Converts the passed text into a structured JSON format,
     currently without translation.
     """
     result_dictionary = create_default_json(text)
 
     paragraphs = divide_into_paragraphs(text)
+
+    words = divide_text_into_words(text, paragraphs)
+    words_index = 0
 
     for i, paragraph in enumerate(paragraphs):
         paragraph_json = create_paragraph_json(i, paragraph)
@@ -175,12 +178,17 @@ def create_json_from_text(text: str):
 
         for j, sentence in enumerate(sentences):
             sentence_json = create_sentence_json(j, sentence)
+            accumulated_length = 0  # Track the total length of words added
 
-            words = divide_into_words(sentence)
-
-            for k, word in enumerate(words):
-                word_json = create_word_json(k, word)
+            for k in range(words_index, len(words)):
+                word = words[k]
+                accumulated_length += len(word)
+                word_json = create_word_json(k - words_index, word)
                 sentence_json["words"].append(word_json)
+
+                if accumulated_length >= len(sentence):
+                    words_index = k + 1
+                    break
 
             paragraph_json["sentences"].append(sentence_json)
 
