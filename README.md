@@ -44,7 +44,7 @@ This script processes Chinese text through a series of steps, including text div
     - other default functions like `create_paragraph_json()` for creation JSON structure
 
 ### 5.  FastAPI Endpoint
-- Run fastapi with uvicorn `app:app --host 0.0.0.0 --port 8000 --reload`
+- Run fastapi with `uvicorn app:app --host 0.0.0.0 --port 8000 --reload`
 - Endpoint `POST /get-json/`
   - This endpoint receives Chinese text in the request body and returns the processed JSON output, including extracted words and their structure.
   - Be sure to handle quotes correctly! (as \")
