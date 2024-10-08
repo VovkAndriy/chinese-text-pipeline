@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 
-from json_creator import create_json_from_text
+from services.json_creator import create_json_from_text
 from models import TextRequest
 
 

@@ -1,4 +1,4 @@
-from preprocess import (
+from services.preprocess import (
     divide_into_paragraphs,
     divide_text_into_words,
     divide_into_sentences

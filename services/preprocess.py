@@ -2,8 +2,8 @@ import asyncio
 import re
 import json
 
-from config import system_to_retrieve_words
-from openai_request import (
+from services.config import system_to_retrieve_words
+from services.openai_request import (
     ask_openai,
     count_tokens,
     MAX_TOKENS

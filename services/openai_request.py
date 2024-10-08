@@ -11,7 +11,7 @@ OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 client = AsyncClient(api_key=OPENAI_API_KEY)
 
 MODEL = "gpt-4"
-MAX_TOKENS = 5000
+MAX_TOKENS = 2000
 
 
 async def ask_openai(system_intel: str, prompt: str, model: str = MODEL) -> str:
