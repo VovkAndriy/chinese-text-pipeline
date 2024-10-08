@@ -30,7 +30,7 @@ def ask_openai(system_intel: str, prompt: str, model: str = MODEL) -> str:
             {"role": "system", "content": system_intel},
             {"role": "user", "content": prompt},
         ],
-        max_tokens=MAX_TOKENS,
+        max_tokens=MAX_TOKENS * 2,
     )
     return result.choices[0].message.content
 
